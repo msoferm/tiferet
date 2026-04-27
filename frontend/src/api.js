@@ -1,0 +1,15 @@
+import axios from 'axios';
+const API_URL = process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5002/api' : '/api');
+const api = axios.create({ baseURL: API_URL, headers: { 'Content-Type': 'application/json' } });
+api.interceptors.request.use(c => { const t = localStorage.getItem('tiferet_token'); if (t) c.headers.Authorization = `Bearer ${t}`; return c; });
+
+export const authAPI = { login: d => api.post('/auth/login', d), me: () => api.get('/auth/me') };
+export const membersAPI = { getAll: p => api.get('/members', { params: p }), getStats: () => api.get('/members/stats'), getById: id => api.get(`/members/${id}`), create: d => api.post('/members', d), update: (id, d) => api.put(`/members/${id}`, d), delete: id => api.delete(`/members/${id}`) };
+export const donorsAPI = { getAll: p => api.get('/donors', { params: p }), getStats: () => api.get('/donors/stats'), getById: id => api.get(`/donors/${id}`), create: d => api.post('/donors', d), update: (id, d) => api.put(`/donors/${id}`, d), delete: id => api.delete(`/donors/${id}`) };
+export const donationsAPI = { getAll: p => api.get('/donations', { params: p }), getStats: () => api.get('/donations/stats'), getChart: () => api.get('/donations/chart'), create: d => api.post('/donations', d), update: (id, d) => api.put(`/donations/${id}`, d), delete: id => api.delete(`/donations/${id}`) };
+export const eventsAPI = { getAll: p => api.get('/events', { params: p }), getById: id => api.get(`/events/${id}`), create: d => api.post('/events', d), update: (id, d) => api.put(`/events/${id}`, d), delete: id => api.delete(`/events/${id}`), register: (id, d) => api.post(`/events/${id}/register`, d) };
+export const remindersAPI = { getAll: p => api.get('/reminders', { params: p }), getToday: () => api.get('/reminders/today'), getUpcoming: d => api.get('/reminders/upcoming', { params: { days: d } }), create: d => api.post('/reminders', d), update: (id, d) => api.put(`/reminders/${id}`, d), dismiss: id => api.patch(`/reminders/${id}/dismiss`), delete: id => api.delete(`/reminders/${id}`) };
+export const expensesAPI = { getAll: p => api.get('/expenses', { params: p }), getStats: () => api.get('/expenses/stats'), create: d => api.post('/expenses', d), update: (id, d) => api.put(`/expenses/${id}`, d), delete: id => api.delete(`/expenses/${id}`) };
+export const campaignsAPI = { getAll: () => api.get('/campaigns'), create: d => api.post('/campaigns', d), update: (id, d) => api.put(`/campaigns/${id}`, d), delete: id => api.delete(`/campaigns/${id}`) };
+export const dashboardAPI = { getStats: () => api.get('/dashboard/stats'), getRecentDonations: () => api.get('/dashboard/recent-donations'), getUpcomingEvents: () => api.get('/dashboard/upcoming-events'), getDonationChart: () => api.get('/dashboard/donation-chart') };
+export default api;
