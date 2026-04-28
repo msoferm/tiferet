@@ -157,6 +157,68 @@ CREATE TABLE expenses (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- ── DONATION LANDING PAGES ──
+CREATE TABLE landing_pages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    campaign_id UUID REFERENCES campaigns(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT DEFAULT '',
+    description TEXT DEFAULT '',
+    image_url TEXT DEFAULT '',
+    goal_amount DECIMAL(12,2) DEFAULT 0,
+    raised_amount DECIMAL(12,2) DEFAULT 0,
+    donation_count INTEGER DEFAULT 0,
+    currency VARCHAR(10) DEFAULT 'ILS',
+    allow_usd BOOLEAN DEFAULT true,
+    allow_monthly BOOLEAN DEFAULT true,
+    preset_amounts_ils JSONB DEFAULT '[50,100,180,360,500,1000]',
+    preset_amounts_usd JSONB DEFAULT '[18,36,50,100,180,500]',
+    allow_custom_amount BOOLEAN DEFAULT true,
+    min_amount DECIMAL(10,2) DEFAULT 10,
+    thank_you_message TEXT DEFAULT 'תודה רבה על תרומתך הנדיבה! זכות גדולה עומדת לך.',
+    is_active BOOLEAN DEFAULT true,
+    end_date DATE,
+    show_progress BOOLEAN DEFAULT true,
+    show_donors BOOLEAN DEFAULT true,
+    primary_color VARCHAR(20) DEFAULT '#1e3a5f',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ── AMBASSADORS ──
+CREATE TABLE ambassadors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    landing_page_id UUID NOT NULL REFERENCES landing_pages(id) ON DELETE CASCADE,
+    name VARCHAR(200) NOT NULL,
+    email VARCHAR(255) DEFAULT '',
+    phone VARCHAR(50) DEFAULT '',
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    goal_amount DECIMAL(12,2) DEFAULT 0,
+    raised_amount DECIMAL(12,2) DEFAULT 0,
+    donation_count INTEGER DEFAULT 0,
+    message TEXT DEFAULT '',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ── PUBLIC DONATIONS (from landing pages) ──
+CREATE TABLE public_donations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    landing_page_id UUID REFERENCES landing_pages(id) ON DELETE SET NULL,
+    ambassador_id UUID REFERENCES ambassadors(id) ON DELETE SET NULL,
+    donor_name VARCHAR(200) NOT NULL,
+    donor_email VARCHAR(255) DEFAULT '',
+    donor_phone VARCHAR(50) DEFAULT '',
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'ILS',
+    is_monthly BOOLEAN DEFAULT false,
+    dedication VARCHAR(500) DEFAULT '',
+    is_anonymous BOOLEAN DEFAULT false,
+    status VARCHAR(50) DEFAULT 'completed',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- ── SITE SETTINGS ──
 CREATE TABLE site_settings (
     key VARCHAR(100) PRIMARY KEY,
@@ -179,11 +241,17 @@ CREATE INDEX idx_events_date ON events(event_date);
 CREATE INDEX idx_reminders_date ON reminders(reminder_date);
 CREATE INDEX idx_reminders_type ON reminders(reminder_type);
 CREATE INDEX idx_expenses_date ON expenses(expense_date);
+CREATE INDEX idx_landing_pages_slug ON landing_pages(slug);
+CREATE INDEX idx_ambassadors_slug ON ambassadors(slug);
+CREATE INDEX idx_ambassadors_page ON ambassadors(landing_page_id);
+CREATE INDEX idx_public_donations_page ON public_donations(landing_page_id);
+CREATE INDEX idx_public_donations_ambassador ON public_donations(ambassador_id);
 
 -- ── TRIGGERS ──
 CREATE OR REPLACE FUNCTION update_updated_at() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW(); RETURN NEW; END; $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_members_updated BEFORE UPDATE ON members FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trg_donors_updated BEFORE UPDATE ON donors FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_landing_pages_updated BEFORE UPDATE ON landing_pages FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ── AUTO UPDATE DONOR STATS ──
 CREATE OR REPLACE FUNCTION update_donor_stats() RETURNS TRIGGER AS $$

@@ -42,7 +42,7 @@ export default function Dashboard({ setPage }) {
         <StatCard icon={<Bell />} color="#ef4444" label="תזכורות היום" value={stats?.reminders?.today || 0} onClick={() => setPage('reminders')} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="dashboard-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div className="card">
           <div className="card-header"><h2><TrendingUp size={18} />תרומות - 12 חודשים</h2></div>
           <div className="card-body">

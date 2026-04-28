@@ -20,6 +20,8 @@ app.use('/api/events', require('./routes/events'));
 app.use('/api/reminders', require('./routes/reminders'));
 app.use('/api/expenses', require('./routes/expenses'));
 app.use('/api/campaigns', require('./routes/campaigns'));
+app.use('/api/landing-pages', require('./routes/landingPages'));
+app.use('/api/donate', require('./routes/publicDonate'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
