@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LayoutDashboard, Users, Heart, DollarSign, Calendar, Bell, Receipt, Target, LogIn, LogOut, ChevronRight, ChevronLeft, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, Heart, DollarSign, Calendar, Bell, Receipt, Target, LogIn, LogOut, ChevronRight, ChevronLeft, Building2, Menu, X } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Members from './pages/Members';
 import Donors from './pages/Donors';
@@ -30,6 +30,13 @@ function AppContent() {
   const { user, logout, loading } = useAuth();
   const [page, setPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on page change
+  const handlePageChange = (p) => {
+    setPage(p);
+    setMobileMenuOpen(false);
+  };
 
   if (loading) return <div className="loading-screen"><div className="spinner" /><p>טוען...</p></div>;
   if (!user) return <LoginPage />;
@@ -39,30 +46,51 @@ function AppContent() {
   return (
     <div className="app-container">
       <DailyPopup />
-      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+
+      {/* Mobile Header */}
+      <div className="mobile-header">
+        <h1>🕎 תפארת</h1>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && <div className="mobile-overlay show" onClick={() => setMobileMenuOpen(false)} />}
+
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'} ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-logo">
-          {sidebarOpen && <div className="logo-content"><div className="logo-icon"><Building2 size={22} color="white" /></div><div><div className="logo-title">תפארת</div><div className="logo-sub">ניהול בית חב"ד</div></div></div>}
-          <button className="toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}</button>
+          {sidebarOpen && (
+            <div className="logo-content">
+              <div className="logo-icon"><Building2 size={22} color="white" /></div>
+              <div><div className="logo-title">תפארת</div><div className="logo-sub">ניהול בית חב"ד</div></div>
+            </div>
+          )}
+          <button className="toggle-btn desktop-only" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            {sidebarOpen ? <ChevronRight size={16}/> : <ChevronLeft size={16}/>}
+          </button>
         </div>
         <nav className="sidebar-nav">
           {NAV.map(n => (
-            <button key={n.id} className={`nav-item ${page === n.id ? 'active' : ''}`} onClick={() => setPage(n.id)} title={!sidebarOpen ? n.label : undefined}>
+            <button key={n.id} className={`nav-item ${page === n.id ? 'active' : ''}`} onClick={() => handlePageChange(n.id)} title={!sidebarOpen ? n.label : undefined}>
               <div className="nav-icon" style={{ background: page === n.id ? n.color : 'transparent' }}>
                 <n.icon size={20} color={page === n.id ? 'white' : n.color} />
               </div>
-              {sidebarOpen && <span className="nav-label">{n.label}</span>}
+              {(sidebarOpen || mobileMenuOpen) && <span className="nav-label">{n.label}</span>}
             </button>
           ))}
         </nav>
-        {sidebarOpen && (
+        {(sidebarOpen || mobileMenuOpen) && (
           <div className="sidebar-footer">
             <span className="user-name">🕎 {user.display_name}</span>
             <button className="logout-btn" onClick={logout}><LogOut size={16} /></button>
           </div>
         )}
       </aside>
+
       <main className={`main-content ${sidebarOpen ? 'sb-open' : 'sb-closed'}`}>
-        <div className="page-wrapper" key={page}><Page setPage={setPage} /></div>
+        <div className="page-wrapper" key={page}><Page setPage={handlePageChange} /></div>
       </main>
     </div>
   );
