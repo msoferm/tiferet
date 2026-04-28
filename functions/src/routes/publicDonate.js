@@ -13,7 +13,8 @@ router.get('/:slug', async (req, res) => {
     if (p.show_donors) {
       donors = (await db.query("SELECT donor_name, amount, currency, is_monthly, dedication, created_at FROM public_donations WHERE landing_page_id=$1 AND status='completed' AND is_anonymous=false ORDER BY created_at DESC LIMIT 20", [p.id])).rows;
     }
-    res.json({ ...p, recent_donors: donors });
+    const ambassadors = (await db.query('SELECT id,name,slug,goal_amount,raised_amount,donation_count,message FROM ambassadors WHERE landing_page_id=$1 AND is_active=true ORDER BY raised_amount DESC', [p.id])).rows;
+    res.json({ ...p, recent_donors: donors, ambassadors });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
